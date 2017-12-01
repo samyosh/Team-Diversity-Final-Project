@@ -3,37 +3,37 @@ library("data.table")
 library("ggplot2")
 library("TTR")
 library("quantmod")
-# library("Rblpapi")   Not 100% sure if we need this. But leaving it for now just be safe
+library("Rblpapi")  
 
 
-# Function to fetch google stock data
-google_stocks <- function(sym, start.date, end.date) {
-  # sy, sm, sd, ey, em, ed correspond to
-  # start year, start month, start day, end year, end month, and end day
-  
-  require(data.table)
-  
-  # Fetch data from google
-  google_out = tryCatch(
-    suppressWarnings(
-      fread(paste0("http://www.google.com/finance/historical",
-                   "?q=", sym,
-                   "&startdate=", paste(start.date, sep = "+"),
-                   "&enddate=", paste(end.date, sep = "+"),
-                   "&output=csv"), sep = ",")),
-    error = function(e) NULL
-  )
-  
-  # If successful, rename first column
-  if(!is.null(google_out)){
-    names(google_out)[1] = "Date"
-  }
-  
-  return(google_out)
+# Quandl package must be installed
+library(Quandl)
+
+# Get your API key from quandl.com
+quandl_api = "LyjxCY3XxHfkd29FAFJy"
+
+# Add the key to the Quandl keychain
+Quandl.api_key(quandl_api)
+
+google_stocks <- function(sym, start_date) {
+    require(devtools)
+    require(Quandl)
+    # create a vector with all lines
+    tryCatch(Quandl(c(
+      paste0("WIKI/", sym, ".8"),  #  Adj. Open
+      paste0("WIKI/", sym, ".9"),  # Adj. High
+      paste0("WIKI/", sym, ".10"), # Adj. Low
+      paste0("WIKI/", sym, ".11"), # Adj. Close
+      paste0("WIKI/", sym, ".12")), # Adj. Volume
+      start_date = start_date,
+      type = "zoo"
+    ))
 }
 
+aapl_data <- google_stocks("AAPL", "2015-01-01")
+
 # Fetches the data for an individual stock
-TSLA_data <- google_stocks('TSLA', "2016-01-01", Sys.Date())
+TSLA_data <- google_stocks('TSLA', "2015-01-01")
 ggplot(ROKU_data, aes(ROKU_data$High, ROKU_data$Close)) + geom_point()
 
 SP500_ETF_data <- google_stocks("SPY")    # S&P500 ETF Fund
